@@ -22,7 +22,7 @@ BATCH_SIZE = 500
 
 
 class DataEmbedding:
-    def __init__(self, BASE_DATA_PATH: str, BASE_DATA_TO_EMBED_PATH: str, OUTPUT_EMBEDDINGS_PATH: str, model: str, base_dataset: pd.DataFrame, collection_name: str):
+    def __init__(self, BASE_DATA_PATH: str, BASE_DATA_TO_EMBED_PATH: str, OUTPUT_EMBEDDINGS_PATH: str, model: str, base_dataset: pd.DataFrame, collection_name: str, query: str):
         self.BASE_DATA_PATH = BASE_DATA_PATH
         self.BASE_DATA_TO_EMBED_PATH = BASE_DATA_TO_EMBED_PATH
         self.OUTPUT_EMBEDDINGS_PATH = OUTPUT_EMBEDDINGS_PATH
@@ -31,6 +31,7 @@ class DataEmbedding:
         self.embedder = None
         self.client = None
         self.collection_name = collection_name
+        self.query = query
 
     def create_file_to_embed(self, base_dataset: pd.DataFrame, BASE_DATA_TO_EMBED_PATH: str):
         columns_to_keep = []
@@ -105,6 +106,43 @@ class DataEmbedding:
             progress = (completed / len(ids)) * 100
             print(f"ChromaDB progress: {completed}/{len(ids)} ({progress:.2f}%)")
 
+        return collection
+
+    def get_chromadb_collection(self, collection_name: str):
+        if self.client is None:
+            self.client = chromadb.PersistentClient("./chroma_db")
+
+        collection = self.client.get_collection(name=collection_name)
+        return collection
+
+    def search_similarity(self, collection_name: str, query: str) -> dict:
+        collection = self.get_chromadb_collection(collection_name)
+        self.load_embedding_model()
+        query_embedding = self.embedder.encode([query]).tolist()
+
+        anime_results = collection.query(
+            query_embeddings = query_embedding,
+            n_results=5,
+            where={"Status": "Finished Airing"}
+        )
+
+        return anime_results
+
+    def show_search_results(self, anime_results: dict, query: str) -> None:
+        metadatas = anime_results["metadatas"][0]
+        distances = anime_results["distances"][0]
+
+        print("\nSearch results for the query:\n",query)
+        for index, metadata in enumerate(metadatas, start=1):
+            distance = distances[index - 1]
+            print(f"\n{index}. {metadata['title']}")
+            print(f"   Score: {metadata['Score']}")
+            print(f"   Status: {metadata['Status']}")
+            print(f"   Year: {metadata['Released_Year']}")
+            print(f"   Type: {metadata['Type']}")
+            print(f"   Genres: {metadata['Genres']}")
+            print(f"   Distance: {distance:.4f}")
+    
 if __name__ == "__main__":
     BASE_DATA_PATH = "data/merged_datasets.csv"
     BASE_DATA_TO_EMBED_PATH = "data/dataset_to_embed.csv"
@@ -112,9 +150,12 @@ if __name__ == "__main__":
     model = "sentence-transformers/all-mpnet-base-v2"
     base_dataset = load_dataset(BASE_DATA_PATH)
     collection_name = "dataset_embeddings"
+    query = "An anime about vikings and a history of revenge."
 
-    data_embedding = DataEmbedding(BASE_DATA_PATH, BASE_DATA_TO_EMBED_PATH, OUTPUT_EMBEDDINGS_PATH, model, base_dataset, collection_name)
+    data_embedding = DataEmbedding(BASE_DATA_PATH, BASE_DATA_TO_EMBED_PATH, OUTPUT_EMBEDDINGS_PATH, model, base_dataset, collection_name, query)
 
-    data_embedding.create_file_to_embed(base_dataset, BASE_DATA_TO_EMBED_PATH)
-    data_embedding.embed_data(BASE_DATA_TO_EMBED_PATH, OUTPUT_EMBEDDINGS_PATH)
-    data_embedding.inicialize_chromadb(collection_name, OUTPUT_EMBEDDINGS_PATH)
+    #data_embedding.create_file_to_embed(base_dataset, BASE_DATA_TO_EMBED_PATH)
+    #data_embedding.embed_data(BASE_DATA_TO_EMBED_PATH, OUTPUT_EMBEDDINGS_PATH)
+    #data_embedding.inicialize_chromadb(collection_name, OUTPUT_EMBEDDINGS_PATH)
+    anime_results = data_embedding.search_similarity(collection_name, query)
+    data_embedding.show_search_results(anime_results, query)
