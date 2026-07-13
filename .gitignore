@@ -19,7 +19,12 @@ env/
 
 # Data files generated or downloaded locally
 data/*.csv
+data/*.pkl
 *.csv
+*.pkl
+
+# Local vector database
+chroma_db/
 
 # OS / editor noise
 .DS_Store
