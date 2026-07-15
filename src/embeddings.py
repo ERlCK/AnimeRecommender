@@ -154,8 +154,8 @@ if __name__ == "__main__":
 
     data_embedding = DataEmbedding(BASE_DATA_PATH, BASE_DATA_TO_EMBED_PATH, OUTPUT_EMBEDDINGS_PATH, model, base_dataset, collection_name, query)
 
-    #data_embedding.create_file_to_embed(base_dataset, BASE_DATA_TO_EMBED_PATH)
-    #data_embedding.embed_data(BASE_DATA_TO_EMBED_PATH, OUTPUT_EMBEDDINGS_PATH)
-    #data_embedding.inicialize_chromadb(collection_name, OUTPUT_EMBEDDINGS_PATH)
+    data_embedding.create_file_to_embed(base_dataset, BASE_DATA_TO_EMBED_PATH)
+    data_embedding.embed_data(BASE_DATA_TO_EMBED_PATH, OUTPUT_EMBEDDINGS_PATH)
+    data_embedding.inicialize_chromadb(collection_name, OUTPUT_EMBEDDINGS_PATH)
     anime_results = data_embedding.search_similarity(collection_name, query)
     data_embedding.show_search_results(anime_results, query)

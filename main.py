@@ -5,14 +5,14 @@ import time
 
 
 
-SCR_DIR = Path(__file__).resolve().parent / "scr"
-sys.path.append(str(SCR_DIR))
+SRC_DIR = Path(__file__).resolve().parent / "src"
+sys.path.append(str(SRC_DIR))
 
-from scr.dataset_cleaning import DataHandler
-from scr.embeddings import DataEmbedding
-from scr.dataset_io import load_dataset, save_dataset
-from scr.dataset_update import DatasetUpdater, MAPPING_JIKAN_TO_OLD
-from scr.ingestion import DataAcquirer
+from src.dataset_cleaning import DataHandler
+from src.embeddings import DataEmbedding
+from src.dataset_io import load_dataset, save_dataset
+from src.dataset_update import DatasetUpdater, MAPPING_JIKAN_TO_OLD
+from src.ingestion import DataAcquirer
 
 
 def main() -> None:
