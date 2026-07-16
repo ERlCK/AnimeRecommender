@@ -103,7 +103,7 @@ On Windows:
 .venv\Scripts\activate
 ```
 
-3. Install the main dependencies:
+3.Install the main dependencies:
 
 ```bash
 pip install -r requirements.txt
