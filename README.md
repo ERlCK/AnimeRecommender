@@ -48,6 +48,7 @@ AnimeRecommender/
 |   |-- dataset_io.py       # Dataset loading/saving helpers
 |   |-- dataset_update.py   # Schema alignment and dataset merging
 |   |-- embeddings.py       # Embedding generation and ChromaDB queries
+|   |-- evaluation.py       # Retrieval quality evaluation script
 |   |-- ingestion.py        # Jikan API data acquisition
 |   `-- recommender.py      # Query and recommendation logic
 |-- main.py                 # Pipeline orchestration
@@ -127,6 +128,14 @@ python main.py
 ```
 
 The pipeline will fetch new anime data, clean and merge datasets, generate embeddings, and update the local ChromaDB database.
+
+6. Evaluate recommendation quality:
+
+```bash
+python src/evaluation.py
+```
+
+The evaluation script runs hand-labeled queries and reports Top-1 accuracy, Top-5 recall, Top-10 recall, and MRR.
 
 ## Example Query Prototype
 
