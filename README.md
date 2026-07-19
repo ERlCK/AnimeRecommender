@@ -48,7 +48,8 @@ AnimeRecommender/
 |   |-- dataset_io.py       # Dataset loading/saving helpers
 |   |-- dataset_update.py   # Schema alignment and dataset merging
 |   |-- embeddings.py       # Embedding generation and ChromaDB queries
-|   `-- ingestion.py        # Jikan API data acquisition
+|   |-- ingestion.py        # Jikan API data acquisition
+|   `-- recommender.py      # Query and recommendation logic
 |-- main.py                 # Pipeline orchestration
 |-- .gitignore
 `-- README.md
