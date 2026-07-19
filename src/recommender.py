@@ -28,7 +28,18 @@ class AnimeRecommender:
 
         return None
 
-    def _passes_post_filters(self, metadata: dict, min_score: float | None = None, genre: str | None = None) -> bool:
+    def _passes_post_filters(
+        self,
+        metadata: dict,
+        distance: float,
+        min_score: float | None = None,
+        genre: str | None = None,
+        themes: str | None = None,
+        max_distance: float | None = None,
+    ) -> bool:
+        if max_distance is not None and distance > max_distance:
+            return False
+
         if min_score is not None:
             try:
                 score = float(metadata["Score"])
@@ -43,17 +54,24 @@ class AnimeRecommender:
             if genre.lower() not in genres:
                 return False
 
+        if themes is not None:
+            anime_themes = str(metadata.get("Themes", "")).lower()
+            if themes.lower() not in anime_themes:
+                return False
+
         return True
 
     def recommend(
         self,
         query: str,
-        n_results: int = 5,
+        n_results: int = 5, #Final number of recommendations to show
         status: str | None = "Finished Airing",
         min_score: float | None = None,
-        anime_type: str | None = None,
+        anime_type: str | None = None, #"TV", "Movie", "OVA", "ONA", "Special", "Music"
         genre: str | None = None,
-        fetch_results: int = 50,
+        themes: str | None = None,
+        max_distance: float | None = None,
+        fetch_results: int = 15, #Number of ChromaDB results fetched before post-filtering (filtered by score, for example)
     ) -> list[dict]:
         query_embedding = self.embedder.encode([query]).tolist()
         chromadb_filter = self._build_chromadb_filter(status=status, anime_type=anime_type)
@@ -69,7 +87,14 @@ class AnimeRecommender:
         distances = anime_results["distances"][0]
 
         for metadata, distance in zip(metadatas, distances):
-            if not self._passes_post_filters(metadata, min_score=min_score, genre=genre):
+            if not self._passes_post_filters(
+                metadata,
+                distance,
+                min_score=min_score,
+                genre=genre,
+                themes=themes,
+                max_distance=max_distance,
+            ):
                 continue
 
             recommendation = dict(metadata)
@@ -95,6 +120,7 @@ class AnimeRecommender:
             print(f"   Year: {recommendation['Released_Year']}")
             print(f"   Type: {recommendation['Type']}")
             print(f"   Genres: {recommendation['Genres']}")
+            print(f"   Themes: {recommendation.get('Themes', '')}")
             print(f"   Distance: {recommendation['Distance']:.4f}")
 
 
@@ -109,5 +135,6 @@ if __name__ == "__main__":
         n_results=5,
         status="Finished Airing",
         min_score=7.0,
+        max_distance=0.85,
     )
     recommender.show_recommendations(recommendations, query)
