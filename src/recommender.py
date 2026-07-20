@@ -247,14 +247,14 @@ class AnimeRecommender:
     def recommend(
         self,
         query: str,
-        n_results: int = 5,
+        n_results: int = 5, #Final number of recommendations to show
         status: str | None = "Finished Airing",
         min_score: float | None = None,
-        anime_type: str | None = None,
+        anime_type: str | None = None, #"TV", "Movie", "OVA", "ONA", "Special", "Music"
         genre: str | None = None,
         themes: str | None = None,
         max_distance: float | None = None,
-        fetch_results: int = 15,
+        fetch_results: int = 15, #Number of ChromaDB results fetched before post-filtering (filtered by score, for example)
     ) -> list[dict]:
         excluded_ids = set()
         reference_title = self._extract_reference_title(query)

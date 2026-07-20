@@ -7,6 +7,9 @@ import time
 COLUMNS_TO_KEEP = [
     "myanimelist_id",
     "title",
+    "title_english",
+    "title_japanese",
+    "title_synonyms",
     "description",
     "Type",
     "Genres",
@@ -44,19 +47,28 @@ class DataEmbedding:
     def load_embedding_model(self):
         self.embedder = SentenceTransformer(self.model, device="cuda")
 
+    def get_text_column(self, dataset: pd.DataFrame, column: str) -> pd.Series:
+        if column in dataset.columns:
+            return dataset[column].fillna("")
+
+        return pd.Series([""] * len(dataset), index=dataset.index)
+
     def embed_data(self, BASE_DATA_TO_EMBED_PATH: str, OUTPUT_EMBEDDINGS_PATH: str) -> pd.DataFrame:
         dataset_to_embed = load_dataset(BASE_DATA_TO_EMBED_PATH)
         #dataset_to_embed = dataset_to_embed.head(500) #TESTING
         self.load_embedding_model()
 
         dataset_to_embed["embedding_text"] = (
-            "Title: " + dataset_to_embed["title"].fillna("") + "\n" +
-            "Type: " + dataset_to_embed["Type"].fillna("") + "\n" +
-            "Genres: " + dataset_to_embed["Genres"].fillna("") + "\n" +
-            "Themes: " + dataset_to_embed["Themes"].fillna("") + "\n" +
-            "Demographic: " + dataset_to_embed["Demographic"].fillna("") + "\n" +
-            "Rating: " + dataset_to_embed["Rating"].fillna("") + "\n" +
-            "Description: " + dataset_to_embed["description"].fillna("")
+            "Title: " + self.get_text_column(dataset_to_embed, "title") + "\n" +
+            "English title: " + self.get_text_column(dataset_to_embed, "title_english") + "\n" +
+            "Japanese title: " + self.get_text_column(dataset_to_embed, "title_japanese") + "\n" +
+            "Title synonyms: " + self.get_text_column(dataset_to_embed, "title_synonyms") + "\n" +
+            "Type: " + self.get_text_column(dataset_to_embed, "Type") + "\n" +
+            "Genres: " + self.get_text_column(dataset_to_embed, "Genres") + "\n" +
+            "Themes: " + self.get_text_column(dataset_to_embed, "Themes") + "\n" +
+            "Demographic: " + self.get_text_column(dataset_to_embed, "Demographic") + "\n" +
+            "Rating: " + self.get_text_column(dataset_to_embed, "Rating") + "\n" +
+            "Description: " + self.get_text_column(dataset_to_embed, "description")
         )
 
         start_time = time.perf_counter()
@@ -90,7 +102,21 @@ class DataEmbedding:
         ids = embedded_dataset["myanimelist_id"].astype(str).tolist()
         embeddings = embedded_dataset["embedding"].tolist()
         documents = embedded_dataset["embedding_text"].tolist()
-        metadatas = embedded_dataset[["myanimelist_id", "title", "Status", "Score", "Released_Year", "Type", "Genres"]].fillna("").to_dict("records")
+        metadata_columns = [
+            "myanimelist_id",
+            "title",
+            "title_english",
+            "title_japanese",
+            "title_synonyms",
+            "Status",
+            "Score",
+            "Released_Year",
+            "Type",
+            "Genres",
+            "Themes",
+        ]
+        existing_metadata_columns = [column for column in metadata_columns if column in embedded_dataset.columns]
+        metadatas = embedded_dataset[existing_metadata_columns].fillna("").to_dict("records")
 
         for start_index in range(0, len(ids), BATCH_SIZE):
             end_index = start_index + BATCH_SIZE
